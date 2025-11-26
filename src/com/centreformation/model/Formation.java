@@ -7,7 +7,7 @@ public class Formation {
 
     private int idFormation;
     private String titre;
-    private int duree; // en jours ou heures, selon le sujet
+    private int duree;
     private CategorieFormation categorie;
     private List<Session> sessions = new ArrayList<>();
 
@@ -17,18 +17,6 @@ public class Formation {
         this.duree = duree;
         this.categorie = categorie;
     }
-
-    public void ajouterSession(Session s) {
-        if (s != null && !sessions.contains(s)) {
-            sessions.add(s);
-        }
-    }
-
-    public void supprimerSession(int idSession) {
-        sessions.removeIf(s -> s.getIdSession() == idSession);
-    }
-
-    // Getters
 
     public int getIdFormation() {
         return idFormation;
@@ -50,8 +38,23 @@ public class Formation {
         return sessions;
     }
 
+    public void ajouterSession(Session s) {
+        if (s != null && !sessions.contains(s)) {
+            sessions.add(s);
+        }
+    }
+
+    public void supprimerSession(int idSession) {
+        sessions.removeIf(s -> s.getIdSession() == idSession);
+    }
+
     @Override
     public String toString() {
-        return idFormation + " - " + titre + " (" + categorie + ")";
+        return "Formation{" +
+                "id=" + idFormation +
+                ", titre='" + titre + '\'' +
+                ", duree=" + duree +
+                ", categorie=" + categorie +
+                '}';
     }
 }

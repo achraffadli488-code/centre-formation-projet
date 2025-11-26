@@ -4,24 +4,31 @@ import com.centreformation.model.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class CentreFormationManager {
+
+    private static final CentreFormationManager INSTANCE = new CentreFormationManager();
 
     private final List<Formation> formations = new ArrayList<>();
     private final List<Apprenant> apprenants = new ArrayList<>();
     private final List<Formateur> formateurs = new ArrayList<>();
-    private final List<Session> sessions = new ArrayList<>();
+    private int compteurInscription = 1;
 
-    // ==========================
-    //       FORMATIONS
-    // ==========================
+    private CentreFormationManager() { }
+
+    public static CentreFormationManager getInstance() {
+        return INSTANCE;
+    }
+
+    // ==================== FORMATIONS ====================
 
     public void ajouterFormation(int id, String titre, int duree, String categorieStr) {
         CategorieFormation categorie;
-
         try {
-            categorie = CategorieFormation.valueOf(categorieStr.toUpperCase());
+            categorie = CategorieFormation.valueOf(categorieStr);
         } catch (IllegalArgumentException e) {
+            System.out.println("Catégorie inconnue, utilisation de AUTRE.");
             categorie = CategorieFormation.AUTRE;
         }
 
@@ -35,9 +42,21 @@ public class CentreFormationManager {
             System.out.println("Aucune formation.");
             return;
         }
-        System.out.println("=== Liste des formations ===");
-        for (Formation f : formations) {
-            System.out.println(f);
+        formations.forEach(System.out::println);
+    }
+
+    public void afficherFormationDetail(int id) {
+        Formation f = rechercherFormation(id);
+        if (f == null) {
+            System.out.println("Formation introuvable.");
+            return;
+        }
+        System.out.println(f);
+        if (f.getSessions().isEmpty()) {
+            System.out.println("  Aucune session pour cette formation.");
+        } else {
+            System.out.println("  Sessions :");
+            f.getSessions().forEach(s -> System.out.println("   - " + s));
         }
     }
 
@@ -45,65 +64,24 @@ public class CentreFormationManager {
         return formations.stream()
                 .filter(f -> f.getIdFormation() == id)
                 .findFirst()
-                .orElseGet(() -> {
-                    System.out.println("Formation " + id + " introuvable.");
-                    return null;
-                });
+                .orElse(null);
     }
 
     public void supprimerFormation(int id) {
-        formations.removeIf(f -> f.getIdFormation() == id);
-        System.out.println("Si elle existait, la formation " + id + " a été supprimée.");
-    }
-
-    // ==========================
-    //       APPRENANTS
-    // ==========================
-
-    public void ajouterApprenant(int id, String nom, String prenom) {
-        Apprenant a = new Apprenant(id, nom, prenom);
-        apprenants.add(a);
-        System.out.println("Apprenant ajouté : " + a.getNom() + " " + a.getPrenom());
-    }
-
-    public void afficherApprenants() {
-        if (apprenants.isEmpty()) {
-            System.out.println("Aucun apprenant.");
-            return;
-        }
-        System.out.println("=== Liste des apprenants ===");
-        for (Apprenant a : apprenants) {
-            System.out.println(a.getIdApprenant() + " - " + a.getNom() + " " + a.getPrenom());
+        boolean removed = formations.removeIf(f -> f.getIdFormation() == id);
+        if (removed) {
+            System.out.println("Formation supprimée.");
+        } else {
+            System.out.println("Formation introuvable.");
         }
     }
 
-    public Apprenant rechercherApprenant(int id) {
-        return apprenants.stream()
-                .filter(a -> a.getIdApprenant() == id)
-                .findFirst()
-                .orElseGet(() -> {
-                    System.out.println("Apprenant " + id + " introuvable.");
-                    return null;
-                });
-    }
-
-    public void supprimerApprenant(int id) {
-        apprenants.removeIf(a -> a.getIdApprenant() == id);
-        System.out.println("Si il existait, l’apprenant " + id + aEtSupprime());
-    }
-
-    private String aEtSupprime() {
-        return " a été supprimé.";
-    }
-
-    // ==========================
-    //       FORMATEURS
-    // ==========================
+    // ==================== FORMATEURS ====================
 
     public void ajouterFormateur(int id, String nom, String prenom) {
         Formateur f = new Formateur(id, nom, prenom);
         formateurs.add(f);
-        System.out.println("Formateur ajouté : " + f.getNom() + " " + f.getPrenom());
+        System.out.println("Formateur ajouté : " + f);
     }
 
     public void afficherFormateurs() {
@@ -111,75 +89,155 @@ public class CentreFormationManager {
             System.out.println("Aucun formateur.");
             return;
         }
-        System.out.println("=== Liste des formateurs ===");
-        for (Formateur f : formateurs) {
-            System.out.println(f.getIdFormateur() + " - " + f.getNom() + " " + f.getPrenom());
-        }
+        formateurs.forEach(System.out::println);
     }
 
     public Formateur rechercherFormateur(int id) {
         return formateurs.stream()
                 .filter(f -> f.getIdFormateur() == id)
                 .findFirst()
-                .orElseGet(() -> {
-                    System.out.println("Formateur " + id + " introuvable.");
-                    return null;
-                });
+                .orElse(null);
     }
 
-    public void supprimerFormateur(int id) {
-        formateurs.removeIf(f -> f.getIdFormateur() == id);
-        System.out.println("Si il existait, le formateur " + id + aEtSupprime());
+    // ==================== APPRENANTS ====================
+
+    public void ajouterApprenant(int id, String nom, String prenom, String email) {
+        Apprenant a = new Apprenant(id, nom, prenom, email);
+        apprenants.add(a);
+        System.out.println("Apprenant ajouté : " + a);
     }
 
-    // ==========================
-    //          SESSIONS
-    // ==========================
+    public void afficherApprenants() {
+        if (apprenants.isEmpty()) {
+            System.out.println("Aucun apprenant.");
+            return;
+        }
+        apprenants.forEach(System.out::println);
+    }
 
-    public void ajouterSession(int idSession, int idFormation) {
+    public Apprenant rechercherApprenant(int id) {
+        return apprenants.stream()
+                .filter(a -> a.getIdApprenant() == id)
+                .findFirst()
+                .orElse(null);
+    }
+
+    // ==================== SESSIONS ====================
+
+    public void ajouterSession(int idSession,
+                               int idFormation,
+                               int idFormateur,
+                               LocalDate debut,
+                               LocalDate fin,
+                               int nbPlacesMax) {
+
         Formation formation = rechercherFormation(idFormation);
         if (formation == null) {
-            System.out.println("Impossible de créer la session : formation inexistante.");
+            System.out.println("Formation introuvable. Session non créée.");
             return;
         }
 
-        // Pour simplifier : dates et nbPlaces par défaut, pas encore de formateur assigné
-        Session s = new Session(
-                idSession,
-                LocalDate.now(),
-                LocalDate.now().plusDays(5),
-                10,
-                formation,
-                null
-        );
-        sessions.add(s);
+        Formateur formateur = rechercherFormateur(idFormateur);
+        if (formateur == null) {
+            System.out.println("Formateur introuvable. Session non créée.");
+            return;
+        }
 
+        Session s = new Session(idSession, debut, fin, nbPlacesMax, formation, formateur);
+        formation.ajouterSession(s);
         System.out.println("Session ajoutée : " + s);
     }
 
     public void afficherSessions() {
-        if (sessions.isEmpty()) {
-            System.out.println("Aucune session.");
+        boolean vide = true;
+        for (Formation f : formations) {
+            for (Session s : f.getSessions()) {
+                System.out.println(s);
+                vide = false;
+            }
+        }
+        if (!vide) return;
+        System.out.println("Aucune session.");
+    }
+
+    public Session rechercherSession(int idSession) {
+        for (Formation f : formations) {
+            Optional<Session> s = f.getSessions().stream()
+                    .filter(sess -> sess.getIdSession() == idSession)
+                    .findFirst();
+            if (s.isPresent()) {
+                return s.get();
+            }
+        }
+        return null;
+    }
+
+    public void supprimerSession(int idSession) {
+        boolean removed = false;
+        for (Formation f : formations) {
+            if (f.getSessions().removeIf(s -> s.getIdSession() == idSession)) {
+                removed = true;
+            }
+        }
+        if (removed) {
+            System.out.println("Session supprimée.");
+        } else {
+            System.out.println("Session introuvable.");
+        }
+    }
+
+    public void ouvrirSession(int idSession) {
+        Session s = rechercherSession(idSession);
+        if (s == null) {
+            System.out.println("Session introuvable.");
             return;
         }
-        System.out.println("=== Liste des sessions ===");
-        for (Session s : sessions) {
-            System.out.println(s);
+        s.ouvrir();
+    }
+
+    public void cloreSession(int idSession) {
+        Session s = rechercherSession(idSession);
+        if (s == null) {
+            System.out.println("Session introuvable.");
+            return;
         }
+        s.clore();
     }
 
-    public Session rechercherSession(int id) {
-        return sessions.stream()
-                .filter(s -> s.getIdSession() == id)
-                .findFirst()
-                .orElseGet(() -> {
-                    System.out.println("Session " + id + " introuvable.");
-                    return null;
-                });
+    public void annulerSession(int idSession) {
+        Session s = rechercherSession(idSession);
+        if (s == null) {
+            System.out.println("Session introuvable.");
+            return;
+        }
+        s.annuler();
     }
 
-    public void supprimerSession(int id) {
-        sessions.removeIf(s -> s.getIdSession() == id);
-        System.out.println("Si elle existait, la session " + id + " a été supprimée.");
+    // ==================== INSCRIPTIONS ====================
+
+    public void inscrireApprenant(int idApprenant, int idSession) {
+        Apprenant a = rechercherApprenant(idApprenant);
+        if (a == null) {
+            System.out.println("Apprenant introuvable.");
+            return;
+        }
+
+        Session s = rechercherSession(idSession);
+        if (s == null) {
+            System.out.println("Session introuvable.");
+            return;
+        }
+
+        if (!s.verifierPlaces()) {
+            System.out.println("Plus de places disponibles pour cette session.");
+            return;
+        }
+
+        Inscription ins = new Inscription(compteurInscription++, LocalDate.now(), s, a);
+        s.ajouterInscription(ins);
+        ins.confirmer();
+        a.ajouterFormation(s.getFormation());
+
+        System.out.println("Inscription confirmée : " + ins);
     }
 }

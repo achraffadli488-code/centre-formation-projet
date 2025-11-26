@@ -2,22 +2,19 @@ package com.centreformation.controller;
 
 import com.centreformation.service.CentreFormationManager;
 import com.centreformation.view.MenuView;
+import java.time.LocalDate;
 import java.util.Scanner;
 
 public class MenuController {
 
-    private final CentreFormationManager manager = new CentreFormationManager();
     private final Scanner scanner = new Scanner(System.in);
+    private final CentreFormationManager manager = CentreFormationManager.getInstance();
 
     public void run() {
-
         int choix;
-
         do {
             MenuView.afficherMenuPrincipal();
-            choix = scanner.nextInt();
-            scanner.nextLine(); // consommer le retour à la ligne
-
+            choix = lireInt();
             switch (choix) {
                 case 1 -> menuFormations();
                 case 2 -> menuSessions();
@@ -26,94 +23,136 @@ public class MenuController {
                 case 5 -> System.out.println("Au revoir.");
                 default -> System.out.println("Choix invalide !");
             }
-
         } while (choix != 5);
     }
 
-    // ================================
-    //          FORMATIONS
-    // ================================
+    // ========================= FORMATIONS =========================
+
     private void menuFormations() {
         int choix;
-
         do {
             MenuView.afficherMenuFormations();
-            choix = scanner.nextInt();
-            scanner.nextLine();
-
+            choix = lireInt();
             switch (choix) {
                 case 1 -> ajouterFormation();
                 case 2 -> manager.afficherFormations();
                 case 3 -> rechercherFormation();
                 case 4 -> supprimerFormation();
-                case 5 -> System.out.println("Retour...");
+                case 5 -> System.out.println("Retour au menu principal.");
                 default -> System.out.println("Choix invalide !");
             }
-
         } while (choix != 5);
     }
 
     private void ajouterFormation() {
         System.out.print("ID formation : ");
-        int id = scanner.nextInt();
-        scanner.nextLine();
+        int id = lireInt();
 
         System.out.print("Titre : ");
         String titre = scanner.nextLine();
 
-        System.out.print("Durée : ");
-        int duree = scanner.nextInt();
-        scanner.nextLine();
+        System.out.print("Durée (en heures) : ");
+        int duree = lireInt();
 
         System.out.print("Catégorie (INFORMATIQUE, MANAGEMENT, LANGUES, AUTRE) : ");
-        String categorie = scanner.nextLine();
+        String cat = scanner.nextLine().toUpperCase();
 
-        manager.ajouterFormation(id, titre, duree, categorie);
+        manager.ajouterFormation(id, titre, duree, cat);
     }
 
     private void rechercherFormation() {
         System.out.print("ID formation : ");
-        int id = scanner.nextInt();
-        scanner.nextLine();
-
-        manager.rechercherFormation(id);
+        int id = lireInt();
+        manager.afficherFormationDetail(id);
     }
 
     private void supprimerFormation() {
-        System.out.print("ID formation : ");
-        int id = scanner.nextInt();
-        scanner.nextLine();
-
+        System.out.print("ID formation à supprimer : ");
+        int id = lireInt();
         manager.supprimerFormation(id);
     }
 
-    // ================================
-    //          APPRENANTS
-    // ================================
+    // ========================= SESSIONS =========================
+
+    private void menuSessions() {
+        int choix;
+        do {
+            MenuView.afficherMenuSessions();
+            choix = lireInt();
+            switch (choix) {
+                case 1 -> ajouterSession();
+                case 2 -> manager.afficherSessions();
+                case 3 -> changerEtatSession();
+                case 4 -> supprimerSession();
+                case 5 -> System.out.println("Retour au menu principal.");
+                default -> System.out.println("Choix invalide !");
+            }
+        } while (choix != 5);
+    }
+
+    private void ajouterSession() {
+        System.out.print("ID session : ");
+        int idSession = lireInt();
+
+        System.out.print("ID formation associée : ");
+        int idFormation = lireInt();
+
+        System.out.print("ID formateur : ");
+        int idFormateur = lireInt();
+
+        System.out.print("Date début (AAAA-MM-JJ) : ");
+        LocalDate debut = LocalDate.parse(scanner.nextLine());
+
+        System.out.print("Date fin (AAAA-MM-JJ) : ");
+        LocalDate fin = LocalDate.parse(scanner.nextLine());
+
+        System.out.print("Nombre de places max : ");
+        int nbPlaces = lireInt();
+
+        manager.ajouterSession(idSession, idFormation, idFormateur, debut, fin, nbPlaces);
+    }
+
+    private void changerEtatSession() {
+        System.out.print("ID session : ");
+        int idSession = lireInt();
+
+        MenuView.afficherMenuEtatSession();
+        int choix = lireInt();
+
+        switch (choix) {
+            case 1 -> manager.ouvrirSession(idSession);
+            case 2 -> manager.cloreSession(idSession);
+            case 3 -> manager.annulerSession(idSession);
+            default -> System.out.println("Choix invalide !");
+        }
+    }
+
+    private void supprimerSession() {
+        System.out.print("ID session à supprimer : ");
+        int idSession = lireInt();
+        manager.supprimerSession(idSession);
+    }
+
+    // ========================= APPRENANTS =========================
+
     private void menuApprenants() {
         int choix;
-
         do {
             MenuView.afficherMenuApprenants();
-            choix = scanner.nextInt();
-            scanner.nextLine();
-
+            choix = lireInt();
             switch (choix) {
                 case 1 -> ajouterApprenant();
                 case 2 -> manager.afficherApprenants();
-                case 3 -> rechercherApprenant();
-                case 4 -> supprimerApprenant();
-                case 5 -> System.out.println("Retour...");
+                case 3 -> inscrireApprenant();
+                case 4 -> System.out.println("Retour au menu principal.");
                 default -> System.out.println("Choix invalide !");
             }
-
-        } while (choix != 5);
+        } while (choix != 4);
     }
 
     private void ajouterApprenant() {
         System.out.print("ID apprenant : ");
-        int id = scanner.nextInt();
-        scanner.nextLine();
+        int id = lireInt();
 
         System.out.print("Nom : ");
         String nom = scanner.nextLine();
@@ -121,52 +160,41 @@ public class MenuController {
         System.out.print("Prénom : ");
         String prenom = scanner.nextLine();
 
-        manager.ajouterApprenant(id, nom, prenom);
+        System.out.print("Email : ");
+        String email = scanner.nextLine();
+
+        manager.ajouterApprenant(id, nom, prenom, email);
     }
 
-    private void rechercherApprenant() {
+    private void inscrireApprenant() {
         System.out.print("ID apprenant : ");
-        int id = scanner.nextInt();
-        scanner.nextLine();
+        int idApprenant = lireInt();
 
-        manager.rechercherApprenant(id);
+        System.out.print("ID session : ");
+        int idSession = lireInt();
+
+        manager.inscrireApprenant(idApprenant, idSession);
     }
 
-    private void supprimerApprenant() {
-        System.out.print("ID apprenant : ");
-        int id = scanner.nextInt();
-        scanner.nextLine();
+    // ========================= FORMATEURS =========================
 
-        manager.supprimerApprenant(id);
-    }
-
-    // ================================
-    //          FORMATEURS
-    // ================================
     private void menuFormateurs() {
         int choix;
-
         do {
             MenuView.afficherMenuFormateurs();
-            choix = scanner.nextInt();
-            scanner.nextLine();
-
+            choix = lireInt();
             switch (choix) {
                 case 1 -> ajouterFormateur();
                 case 2 -> manager.afficherFormateurs();
-                case 3 -> rechercherFormateur();
-                case 4 -> supprimerFormateur();
-                case 5 -> System.out.println("Retour...");
+                case 3 -> System.out.println("Retour au menu principal.");
                 default -> System.out.println("Choix invalide !");
             }
-
-        } while (choix != 5);
+        } while (choix != 3);
     }
 
     private void ajouterFormateur() {
         System.out.print("ID formateur : ");
-        int id = scanner.nextInt();
-        scanner.nextLine();
+        int id = lireInt();
 
         System.out.print("Nom : ");
         String nom = scanner.nextLine();
@@ -177,70 +205,15 @@ public class MenuController {
         manager.ajouterFormateur(id, nom, prenom);
     }
 
-    private void rechercherFormateur() {
-        System.out.print("ID formateur : ");
-        int id = scanner.nextInt();
-        scanner.nextLine();
+    // ========================= UTIL =========================
 
-        manager.rechercherFormateur(id);
-    }
-
-    private void supprimerFormateur() {
-        System.out.print("ID formateur : ");
-        int id = scanner.nextInt();
-        scanner.nextLine();
-
-        manager.supprimerFormateur(id);
-    }
-
-    // ================================
-    //          SESSIONS
-    // ================================
-    private void menuSessions() {
-        int choix;
-
-        do {
-            MenuView.afficherMenuSessions();
-            choix = scanner.nextInt();
+    private int lireInt() {
+        while (!scanner.hasNextInt()) {
+            System.out.print("Veuillez saisir un nombre : ");
             scanner.nextLine();
-
-            switch (choix) {
-                case 1 -> ajouterSession();
-                case 2 -> manager.afficherSessions();
-                case 3 -> rechercherSession();
-                case 4 -> supprimerSession();
-                case 5 -> System.out.println("Retour...");
-                default -> System.out.println("Choix invalide !");
-            }
-
-        } while (choix != 5);
-    }
-
-    private void ajouterSession() {
-        System.out.print("ID session : ");
-        int id = scanner.nextInt();
-        scanner.nextLine();
-
-        System.out.print("ID formation associée : ");
-        int idFormation = scanner.nextInt();
-        scanner.nextLine();
-
-        manager.ajouterSession(id, idFormation);
-    }
-
-    private void rechercherSession() {
-        System.out.print("ID session : ");
-        int id = scanner.nextInt();
-        scanner.nextLine();
-
-        manager.rechercherSession(id);
-    }
-
-    private void supprimerSession() {
-        System.out.print("ID session : ");
-        int id = scanner.nextInt();
-        scanner.nextLine();
-
-        manager.supprimerSession(id);
+        }
+        int valeur = scanner.nextInt();
+        scanner.nextLine(); // consommer le retour à la ligne
+        return valeur;
     }
 }

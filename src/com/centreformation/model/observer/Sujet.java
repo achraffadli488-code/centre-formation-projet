@@ -5,17 +5,21 @@ import java.util.List;
 
 public class Sujet {
 
-    private List<Observateur> observateurs = new ArrayList<>();
+    private final List<Observateur> observateurs = new ArrayList<>();
 
     public void ajouterObservateur(Observateur o) {
-        observateurs.add(o);
+        if (o != null && !observateurs.contains(o)) {
+            observateurs.add(o);
+        }
     }
 
-    public void supprimerObservateur(Observateur o) {
+    public void retirerObservateur(Observateur o) {
         observateurs.remove(o);
     }
 
-    public void notifierObservateurs(String message) {
-        observateurs.forEach(o -> o.notifier(message));
+    protected void notifierObservateurs(String message) {
+        for (Observateur o : observateurs) {
+            o.notifier(message);
+        }
     }
 }

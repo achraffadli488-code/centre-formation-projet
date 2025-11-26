@@ -16,12 +16,6 @@ public class Formateur {
         this.prenom = prenom;
     }
 
-    public void ajouterSpecialite(String s) {
-        if (s != null && !s.isBlank() && !specialites.contains(s)) {
-            specialites.add(s);
-        }
-    }
-
     public int getIdFormateur() {
         return idFormateur;
     }
@@ -36,5 +30,21 @@ public class Formateur {
 
     public List<String> getSpecialites() {
         return specialites;
+    }
+
+    public void ajouterSpecialite(String s) {
+        if (s != null && !s.isEmpty() && !specialites.contains(s)) {
+            specialites.add(s);
+        }
+    }
+
+    @Override
+    public String toString() {
+        return "Formateur{" +
+                "id=" + idFormateur +
+                ", nom='" + nom + '\'' +
+                ", prenom='" + prenom + '\'' +
+                ", specialites=" + specialites +
+                '}';
     }
 }

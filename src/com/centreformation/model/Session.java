@@ -1,16 +1,11 @@
 package com.centreformation.model;
 
+import com.centreformation.model.observer.ConsoleObservateur;
+import com.centreformation.model.observer.Sujet;
+import com.centreformation.model.state.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-
-import com.centreformation.model.observer.Sujet;
-import com.centreformation.model.state.EtatSession;
-import com.centreformation.model.state.SessionAnnuleeState;
-import com.centreformation.model.state.SessionCompleteState;
-import com.centreformation.model.state.SessionOuverteState;
-import com.centreformation.model.state.SessionState;
-import com.centreformation.model.state.SessionTermineeState;
 
 public class Session extends Sujet {
 
@@ -18,10 +13,8 @@ public class Session extends Sujet {
     private LocalDate dateDebut;
     private LocalDate dateFin;
     private int nbPlacesMax;
-
     private EtatSession etat;
     private SessionState state;
-
     private Formation formation;
     private Formateur formateur;
     private List<Inscription> inscriptions = new ArrayList<>();
@@ -43,58 +36,9 @@ public class Session extends Sujet {
         this.etat = EtatSession.OUVERTE;
         this.state = new SessionOuverteState();
 
-        if (formation != null) {
-            formation.ajouterSession(this);
-        }
+        // observer console
+        this.ajouterObservateur(new ConsoleObservateur());
     }
-
-    // ====== Méthodes métier ======
-
-    public void ajouterInscription(Inscription i) {
-        if (!verifierPlaces()) {
-            System.out.println("Plus de places disponibles pour la session " + idSession);
-            return;
-        }
-
-        if (i != null && !inscriptions.contains(i)) {
-            inscriptions.add(i);
-
-            if (getNbPlacesRestantes() == 0) {
-                this.etat = EtatSession.COMPLETE;
-                this.state = new SessionCompleteState();
-                notifierObservateurs("La session " + idSession + " est maintenant complète.");
-            }
-        }
-    }
-
-    public boolean verifierPlaces() {
-        return getNbPlacesRestantes() > 0;
-    }
-
-    public int getNbPlacesRestantes() {
-        long nbInscrits = inscriptions.stream()
-                .filter(i -> i.getStatut() == StatutInscription.CONFIRMEE
-                          || i.getStatut() == StatutInscription.ATTENTE)
-                .count();
-
-        return nbPlacesMax - (int) nbInscrits;
-    }
-
-    // Intégration du pattern State
-
-    public void ouvrir() {
-        state.ouvrir(this);
-    }
-
-    public void clore() {
-        state.clore(this);
-    }
-
-    public void annuler() {
-        state.annuler(this);
-    }
-
-    // ====== Getters / Setters ======
 
     public int getIdSession() {
         return idSession;
@@ -140,26 +84,48 @@ public class Session extends Sujet {
         this.state = state;
     }
 
-    // Méthodes utilitaires utilisées par les State
+    // ==== API métier ====
 
-    public void passerEnTerminee() {
-        this.etat = EtatSession.TERMINEE;
-        this.state = new SessionTermineeState();
+    public boolean verifierPlaces() {
+        long nbConfirmes = inscriptions.stream()
+                .filter(i -> i.getStatut() == StatutInscription.CONFIRMEE)
+                .count();
+        return nbConfirmes < nbPlacesMax;
     }
 
-    public void passerEnAnnulee() {
-        this.etat = EtatSession.ANNULEE;
-        this.state = new SessionAnnuleeState();
+    public void ajouterInscription(Inscription i) {
+        if (i != null && !inscriptions.contains(i)) {
+            inscriptions.add(i);
+        }
     }
 
-    public void passerEnComplete() {
-        this.etat = EtatSession.COMPLETE;
-        this.state = new SessionCompleteState();
+    public void ouvrir() {
+        state.ouvrir(this);
+    }
+
+    public void clore() {
+        state.clore(this);
+    }
+
+    public void annuler() {
+        state.annuler(this);
+    }
+
+    // utilisé par les états pour notifier via Observer
+    public void notifierEtat(String message) {
+        notifierObservateurs(message);
     }
 
     @Override
     public String toString() {
-        return "Session " + idSession + " (" + dateDebut + " -> " + dateFin + "), places max : " +
-                nbPlacesMax + ", état : " + etat;
+        return "Session{" +
+                "id=" + idSession +
+                ", formation=" + (formation != null ? formation.getTitre() : "N/A") +
+                ", formateur=" + (formateur != null ? formateur.getNom() : "N/A") +
+                ", debut=" + dateDebut +
+                ", fin=" + dateFin +
+                ", nbPlacesMax=" + nbPlacesMax +
+                ", etat=" + etat +
+                '}';
     }
 }
