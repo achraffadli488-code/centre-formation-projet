@@ -16,5 +16,6 @@
 ./com/centreformation/model/CategorieFormation.java
 ./com/centreformation/controller/MenuController.java
 ./com/centreformation/app/Main.java
+./com/centreformation/app/SiteWebComplet.java
 ./com/centreformation/view/MenuView.java
 ./com/centreformation/service/CentreFormationManager.java
